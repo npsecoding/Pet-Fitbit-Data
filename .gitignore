@@ -1,10 +1,8 @@
 ## Quartus II
 
 *~
-*.sdc
 *.tcl
 *.pin
-*.mif
 *.hex
 *_tb.csv
 *_tb.spd
