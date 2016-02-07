@@ -36,17 +36,17 @@ Begin
 -- Of course we can override the default output ant any time we like within our if-else VHDL statements
 -- we must override them below when the CPU outputs an address for the 6850 or baud rate generator 
 	
-		RS232_Port_Enable 		<= '0' ;
+		RS232_Port_Enable 			<= '0' ;
 		RS232_Baud_Enable	 		<= '0' ;
 		
-		GPS_Port_Enable			<= '0' ;
+		GPS_Port_Enable				<= '0' ;
 		GPS_Baud_Enable 			<= '0' ;
 		
-		Bluetooth_Port_Enable 	<= '0' ;
-		Bluetooth_Baud_Enable	<= '0' ;
+		Bluetooth_Port_Enable 		<= '0' ;
+		Bluetooth_Baud_Enable	 	<= '0' ;
 		
-		TouchScreen_Port_Enable <= '0' ;
-		TouchScreen_Baud_Enable <= '0' ;
+		TouchScreen_Port_Enable 	<= '0' ;
+		TouchScreen_Baud_Enable 	<= '0' ;
 	
 
 -- IOSelect_H comes from the Avalon to External Bridge (see tutorial 1.8a) and is driven to logic 1 whenever the 

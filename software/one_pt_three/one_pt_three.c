@@ -9,6 +9,9 @@
 #define RS232_RxData      (*(volatile unsigned char *)(0x84000202))
 #define RS232_Baud        (*(volatile unsigned char *)(0x84000204))
 
+#define arr_sz 5
+#define DEBUG 0
+
 void init_RS232(void);
 int putcharRS232(int c);
 int getcharRS232(void);
@@ -18,11 +21,22 @@ int RS232TestForReceivedData(void);
 int main(void) {
 	printf("test starting...\n\n");
 
+	int input[arr_sz] = {0x1, 0x2, 0x3, 0x4, 0x5};
+	int output[arr_sz];
+	int i;
+
 	init_RS232();
 
-	while(1){
-		int c = getcharRS232();
-		putcharRS232(c);
+	for(i = 0; i < arr_sz; i++) {
+		putcharRS232(input[i]);
+		output[i] = getcharRS232();
+	}
+
+	for(i = 0; i < arr_sz; i++) {
+		if (output[i] != input[i]) {
+			printf("test failed!\n");
+			return EXIT_FAILURE;
+		}
 	}
 
 	printf("test passed!\n");
@@ -38,34 +52,42 @@ int main(void) {
  *
  */
 void init_RS232(void) {
+	if (DEBUG == 0) printf("initializing rs232...\n\n");
+
 	// set up 6850 Control Register to utilize a divide by 16 clock,
 	// set RTS low, use 8 bits of data, no parity, 1 stop bit,
 	// transmitter interrupt disabled
 	// RS232_Control(7 DOWNTO 0) = |X|0|0|1|0|1|0|1| = 0b00010101 = 0x15
 	// RS232_Control(7 DOWNTO 0) = |X|1|0|1|0|1|0|1| = 0b01010101 = 0x55
 	RS232_Control 	= 0x15;
-
+	
 	// program baud rate generator to use 115k baud
 	RS232_Baud		= 0x01;
 }
 
 int putcharRS232(int c) {
+	if (DEBUG == 0) printf("polling Tx bit...\n");
+
 	// poll Tx bit in 6850 status register. Wait for it to become '1'
 	while(RS232TestForTransmitData() == 0);
 
 	// write 'c' to the 6850 TxData register to output the character
+	if (DEBUG == 0) printf("writing '%d' to the 6850 TxData register...\n\n", c);
 	RS232_TxData = c;
 
 	return c; // return c
 }
 
 int getcharRS232(void) {
+	if (DEBUG == 0) printf("polling Rx bit...\n");
+
 	// poll Rx bit in 6850 status register. Wait for it to become '1'
 	while(RS232TestForReceivedData() == 0);
 
 	// read received character from 6850 RxData register.
 
 	int res = RS232_RxData;
+	if (DEBUG == 0) printf("received character from 6850 RxData register is %d...\n\n", res);
 
 	return res;
 }
