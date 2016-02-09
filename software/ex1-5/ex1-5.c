@@ -49,9 +49,7 @@ int main(void) {
 
 	//Print out the GPS data values
 	struct gps_data_entry response = GPS_get_GPGGA_data();
-	if(response.used){
-		print_gps_to_LCD(response);
-	}
+	print_gps_to_LCD(response);
 
 	//Delay for some time
 	int delay = 0;
@@ -135,7 +133,10 @@ struct gps_data_entry GPS_get_GPGGA_data(void){
 		}
 		fields[i] = '\0';
 
-		return GPS_parse_data(fields);
+		struct gps_data_entry gps_data = GPS_parse_data(fields);
+
+		if(gps_data.used)
+			return gps_data;
 	}
 }
 
