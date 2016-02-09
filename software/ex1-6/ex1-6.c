@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
+#include <unistd.h>
 
 #define Bluetooth_Control     (*(volatile unsigned char *)(0x84000220))
 #define Bluetooth_Status      (*(volatile unsigned char *)(0x84000220))
@@ -19,23 +19,20 @@ int BluetoothTestForTransmitData(void);
 int BluetoothTestForReceivedData(void);
 
 void enter_command_mode(void);
-void enter_data_mode(void);
 void set_device_name(void);
+
 
 int main(void) {
 
+	char reply;
+
 	//Initialize the bluetooth
+	printf("Initialize the bluetooth \n");
 	init_Bluetooth();
 
 	//Set the device name to group14
 	enter_command_mode();
 	set_device_name();
-
-	//Connect to bluetooth with Android phone
-
-	while(1){
-
-	}
 
 	return 0;
 }
@@ -48,24 +45,21 @@ void enter_command_mode(void){
 	putcharBluetooth('$');
 
 	//Delay for 1 second
-	usleep(1050);
-}
-
-void enter_data_mode(void){
-	//Send the "$$$" to force into command mode
-	putcharBluetooth('-');
-	putcharBluetooth('-');
-	putcharBluetooth('-');
+	usleep(1000000);
 }
 
 void set_device_name(void){
-	char* name_command = "SN,Group14\r\n";
-	int command_length = strlen(name_command);
-
-	int index;
-	for(index = 0; index < command_length; index++){
-		putcharBluetooth(name_command[index]);
-	}
+	putcharBluetooth('S');
+	putcharBluetooth('N');
+	putcharBluetooth(',');
+	putcharBluetooth('T');
+	putcharBluetooth('e');
+	putcharBluetooth('a');
+	putcharBluetooth('m');
+	putcharBluetooth('1');
+	putcharBluetooth('4');
+	putcharBluetooth('\r');
+	putcharBluetooth('\n');
 }
 
 /*

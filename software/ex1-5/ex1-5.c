@@ -105,7 +105,7 @@ void print_gps_to_LCD(struct gps_data_entry response){
 
 				/* Write Longitude and E_W indicator to the second row */
 				alt_up_character_lcd_set_cursor_pos(char_lcd_dev, 0, 1);
-				alt_up_character_lcd_string(char_lcd_dev, response.latitude);
+				alt_up_character_lcd_string(char_lcd_dev, response.longitude);
 				alt_up_character_lcd_shift_cursor(char_lcd_dev, 1);
 				alt_up_character_lcd_string(char_lcd_dev, response.e_w_indicator);
 			}
