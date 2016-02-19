@@ -12,43 +12,48 @@ USE ieee.std_logic_unsigned.all;
 
 ENTITY NIOS_II_SYSTEM IS
 	PORT (
-		RESET : IN STD_LOGIC;
+		RESET 		: IN STD_LOGIC;
 		CLOCK_50Mhz : IN STD_LOGIC;
 		
-		DRAM_CLK, DRAM_CKE : OUT STD_LOGIC;
-		DRAM_ADDR : OUT STD_LOGIC_VECTOR(11 DOWNTO 0);
-		DRAM_BA_0, DRAM_BA_1 : BUFFER STD_LOGIC;
-		DRAM_CS_N, DRAM_CAS_N, DRAM_RAS_N, DRAM_WE_N : OUT STD_LOGIC;
-		DRAM_DQ : INOUT STD_LOGIC_VECTOR(15 DOWNTO 0);
-		DRAM_UDQM, DRAM_LDQM : BUFFER STD_LOGIC;
+		DRAM_CLK, DRAM_CKE 								: OUT STD_LOGIC;
+		DRAM_ADDR 										: OUT STD_LOGIC_VECTOR(11 DOWNTO 0);
+		DRAM_BA_0, DRAM_BA_1 							: BUFFER STD_LOGIC;
+		DRAM_CS_N, DRAM_CAS_N, DRAM_RAS_N, DRAM_WE_N 	: OUT STD_LOGIC;
+		DRAM_DQ 										: INOUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+		DRAM_UDQM, DRAM_LDQM 							: BUFFER STD_LOGIC;
 		
-		IO_acknowledge : in    std_logic;                                  		  -- acknowledge
-		IO_irq         : in    std_logic;                                 		  -- irq
-		IO_address     : out   std_logic_vector(15 downto 0);                     -- address
-		IO_bus_enable  : out   std_logic;                                        -- bus_enable
-		IO_byte_enable : out   std_logic_vector(1 downto 0);                     -- byte_enable
-		IO_rw          : out   std_logic;                                        -- rw
-		IO_write_data  : out   std_logic_vector(15 downto 0);                    -- write_data
-		IO_read_data   : in    std_logic_vector(15 downto 0);							  -- read_dat	
+		IO_acknowledge 	: in    std_logic;                                  		  -- acknowledge
+		IO_irq         	: in    std_logic;                                 		  -- irq
+		IO_address     	: out   std_logic_vector(15 downto 0);                     -- address
+		IO_bus_enable  	: out   std_logic;                                        -- bus_enable
+		IO_byte_enable 	: out   std_logic_vector(1 downto 0);                     -- byte_enable
+		IO_rw          	: out   std_logic;                                        -- rw
+		IO_write_data  	: out   std_logic_vector(15 downto 0);                    -- write_data
+		IO_read_data   	: in    std_logic_vector(15 downto 0);							  -- read_dat	
+			
+		STDIN          	: in    std_logic                     := 'X';             -- RXD
+		STDOUT		   	: out   std_logic ;                                        -- TXD	
 		
-		STDIN        	: in    std_logic                     := 'X';             -- RXD
-		STDOUT		   : out   std_logic ;                                        -- TXD	
-		
-		LCD_DATA		   : inout   std_logic_vector(7 downto 0);
-		LCD_ON		   : out   std_logic ;
-		LCD_BLON		   : out   std_logic ;
-		LCD_EN		   : out   std_logic ;
-		LCD_RS		   : out   std_logic ;
-		LCD_RW		   : out   std_logic ;
+		LCD_DATA		: inout std_logic_vector(7 downto 0);
+		LCD_ON		   	: out   std_logic ;
+		LCD_BLON	    : out   std_logic ;
+		LCD_EN		  	: out   std_logic ;
+		LCD_RS		  	: out   std_logic ;
+		LCD_RW		  	: out   std_logic ;
 		
 		Switches   		: in    std_logic_vector(17 downto 0) := (others => 'X'); -- export
-		Red_Leds		   : out   std_logic_vector(17 downto 0);                    -- export
+		Red_Leds		: out 	std_logic_vector(17 downto 0);                    -- export
 		Green_Leds		: out   std_logic_vector(7 downto 0);                      -- export
-		Push_Buttons   : in    std_logic_vector(2 downto 0)  := (others => 'X');  -- export
+		Push_Buttons   	: in    std_logic_vector(2 downto 0)  := (others => 'X');  -- export
 		Hex0_1			: out   std_logic_vector(7 downto 0) ;
 		Hex2_3			: out   std_logic_vector(7 downto 0) ;
 		Hex4_5			: out   std_logic_vector(7 downto 0) ;
-		Hex6_7			: out   std_logic_vector(7 downto 0) 
+		Hex6_7			: out   std_logic_vector(7 downto 0) ;
+		
+		SDCard_cmd     	: inout std_logic        := '0';         --          sdcard.b_SD_cmd
+		SDCard_dat     	: inout std_logic        := '0';         --                .b_SD_dat
+		SDCard_dat3    	: inout std_logic        := '0';         --                .b_SD_dat3
+		SDCard_clock   	: out   std_logic                        --                .o_SD_clock
 );
 END NIOS_II_SYSTEM;
 
@@ -71,8 +76,8 @@ ARCHITECTURE Structure OF NIOS_II_SYSTEM IS
 			sdram_wire_dqm         : out   std_logic_vector(1 downto 0);                     -- dqm
 			sdram_wire_ras_n       : out   std_logic;                                        -- ras_n
 			sdram_wire_we_n        : out   std_logic;                                        -- we_n
-			io_acknowledge         : in    std_logic                     := 'X';             -- acknowledge
-			io_irq                 : in    std_logic                     := 'X';             -- irq
+			io_acknowledge         : in    std_logic     			     := 'X';             -- acknowledge
+			io_irq                 : in    std_logic     			     := 'X';             -- irq
 			io_address             : out   std_logic_vector(15 downto 0);                    -- address
 			io_bus_enable          : out   std_logic;                                        -- bus_enable
 			io_byte_enable         : out   std_logic_vector(1 downto 0);                     -- byte_enable
@@ -95,7 +100,11 @@ ARCHITECTURE Structure OF NIOS_II_SYSTEM IS
 			hex0_1_export          : out   std_logic_vector(7 downto 0);                     -- export
 			hex2_3_export          : out   std_logic_vector(7 downto 0);                     -- export
 			hex4_5_export          : out   std_logic_vector(7 downto 0);                     -- export
-			hex6_7_export          : out   std_logic_vector(7 downto 0)                      -- export
+			hex6_7_export          : out   std_logic_vector(7 downto 0);                     -- export
+			sdcard_b_SD_cmd        : inout std_logic             := '0';            			-- sdcard.b_SD_cmd
+			sdcard_b_SD_dat        : inout std_logic             := '0';            			-- .b_SD_dat
+			sdcard_b_SD_dat3       : inout std_logic             := '0';            			-- .b_SD_dat3
+			sdcard_o_SD_clock      : out   std_logic                                 			-- .o_SD_clock
 		);
 	end component nios_system;
 	
@@ -111,47 +120,52 @@ BEGIN
 	-- Instantiate the Nios II system entity generated by the Qsys tool.
 	NiosII: nios_system
 	PORT MAP (
-		clk_clk => CLOCK_50Mhz,
-		reset_reset_n => RESET,
+		clk_clk 				=> CLOCK_50Mhz,
+		reset_reset_n			=> RESET,
 		
-		sdram_clk_clk => DRAM_CLK,
-		sdram_wire_addr => DRAM_ADDR,
-		sdram_wire_ba => BA,
-		sdram_wire_cas_n => DRAM_CAS_N,
-		sdram_wire_cke => DRAM_CKE,
-		sdram_wire_cs_n => DRAM_CS_N,
-		sdram_wire_dq => DRAM_DQ,
-		sdram_wire_dqm => DQM,
-		sdram_wire_ras_n => DRAM_RAS_N,
-		sdram_wire_we_n => DRAM_WE_N,
+		sdram_clk_clk 			=> DRAM_CLK,
+		sdram_wire_addr 		=> DRAM_ADDR,
+		sdram_wire_ba 			=> BA,
+		sdram_wire_cas_n 		=> DRAM_CAS_N,
+		sdram_wire_cke			=> DRAM_CKE,
+		sdram_wire_cs_n 		=> DRAM_CS_N,
+		sdram_wire_dq 			=> DRAM_DQ,
+		sdram_wire_dqm 			=> DQM,
+		sdram_wire_ras_n		=> DRAM_RAS_N,
+		sdram_wire_we_n 		=> DRAM_WE_N,
 		
-		io_acknowledge => IO_acknowledge,
-		io_irq => IO_irq,
-		io_address => IO_address,
-		io_bus_enable => IO_bus_enable,
-		io_byte_enable => IO_byte_enable,
-		io_rw => IO_rw,
-		io_write_data => IO_write_data,
-		io_read_data => IO_read_data,
+		io_acknowledge			=> IO_acknowledge,
+		io_irq 					=> IO_irq,
+		io_address 				=> IO_address,
+		io_bus_enable 			=> IO_bus_enable,
+		io_byte_enable 			=> IO_byte_enable,
+		io_rw 					=> IO_rw,
+		io_write_data 			=> IO_write_data,
+		io_read_data 			=> IO_read_data,
 		
-		rs232_RXD => STDIN,
-		rs232_TXD => STDOUT,
+		rs232_RXD 				=> STDIN,
+		rs232_TXD 				=> STDOUT,
 		
-		lcd_display_DATA => LCD_DATA,
-		lcd_display_ON => LCD_ON,
-		lcd_display_BLON => LCD_BLON,
-		lcd_display_EN => LCD_EN,
-		lcd_display_RS => LCD_RS,
-		lcd_display_RW => LCD_RW,
+		lcd_display_DATA 		=> LCD_DATA,
+		lcd_display_ON 			=> LCD_ON,
+		lcd_display_BLON		=> LCD_BLON,
+		lcd_display_EN 			=> LCD_EN,
+		lcd_display_RS 			=> LCD_RS,
+		lcd_display_RW 			=> LCD_RW,
 		
-		switches_export => Switches,   
-		red_leds_export => Red_Leds,  
-		green_leds_export => Green_Leds,
-		push_buttons123_export => Push_Buttons,
+		switches_export 		=> Switches,   
+		red_leds_export			=> Red_Leds,  
+		green_leds_export		=> Green_Leds,
+		push_buttons123_export	=> Push_Buttons,
 		
-		hex0_1_export => Hex0_1,
-		hex2_3_export => Hex2_3,
-		hex4_5_export => Hex4_5,
-		hex6_7_export => Hex6_7
+		hex0_1_export 			=> Hex0_1,
+		hex2_3_export			=> Hex2_3,
+		hex4_5_export			=> Hex4_5,
+		hex6_7_export			=> Hex6_7,
+		
+		sdcard_b_SD_cmd  		=> SDCard_cmd,
+		sdcard_b_SD_dat			=> SDCard_dat,
+		sdcard_b_SD_dat3		=> SDCard_dat3,
+		sdcard_o_SD_clock 		=>SDCard_clock
 	);
 END Structure;

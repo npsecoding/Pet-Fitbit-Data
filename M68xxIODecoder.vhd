@@ -5,13 +5,13 @@ use ieee.std_logic_unsigned.all;
 
 entity M68xxIODecoder is
 	Port (
-		Address 							: in Std_logic_vector(15 downto 0) ;
-		IOSelect_H 						: in Std_logic ;
-		ByteSelect_L					: in Std_Logic ;
+		Address 					: in Std_logic_vector(15 downto 0) ;
+		IOSelect_H 					: in Std_logic ;
+		ByteSelect_L				: in Std_Logic ;
 		RS232_Port_Enable 			: out std_logic;
 		RS232_Baud_Enable 			: out std_logic;
-		GPS_Port_Enable 				: out std_logic;
-		GPS_Baud_Enable 				: out std_logic;
+		GPS_Port_Enable 			: out std_logic;
+		GPS_Baud_Enable 			: out std_logic;
 		Bluetooth_Port_Enable 		: out std_logic;
 		Bluetooth_Baud_Enable 		: out std_logic;
 		TouchScreen_Port_Enable 	: out std_logic;
