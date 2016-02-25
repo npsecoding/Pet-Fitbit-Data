@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <altera_up_sd_card_avalon_interface.h>
+#include <Altera_UP_SD_Card_Avalon_Interface.h>
 
 #ifndef NULL
 #define NULL   ((void *) 0)
@@ -38,12 +38,15 @@ struct gps_data_entry GPS_parse_data(char* fields);
 void GPS_get_GPGGA_data_dump(void);
 void GPS_erase_log(void);
 void sendCommandToGPS(char* commandToSend);
-void sendDataToSDcard(struct gps_data_entry responseToSend);
+int sendDataToSDcard(struct gps_data_entry responseToSend);
 int connectSDCard(void);
 void sendField(char* fieldName, char* fieldValue);
 
 alt_up_sd_card_dev *device_reference = NULL;
 short int myFileHandle;
+short int connected = 0;
+int lognum = 13;
+int count = 0;
 
 int main(void) {
 
@@ -51,18 +54,25 @@ int main(void) {
 	GPS_erase_log();
 
 	//Change the condition to the "log button"
-	while(1){
+	while(count < lognum){
 
 	//Print out the GPS data values
 	struct gps_data_entry response = GPS_get_GPGGA_data();
-	sendDataToSDcard(response);
+	int success = sendDataToSDcard(response);
+
+	if(!success){
+		break;
+	}
 
 	//Delay for some time before next data log
 	int delay = 0;
 	while(delay++ < delay_time){}
 
+	count++;
+
 	}
 
+	printf("-------------Exiting----------------");
 	return 0;
 }
 void sendField(char* fieldName, char* fieldValue){
@@ -73,7 +83,7 @@ void sendField(char* fieldName, char* fieldValue){
 	while(fieldName[index] != '\0'){
 		write_signal = alt_up_sd_card_write(myFileHandle, fieldName[index++]);
 		if(write_signal == false) {
-				printf("Error writing time to file...\n");
+				printf("Error writing to file...\n");
 				return;
 		}
 	}
@@ -83,12 +93,15 @@ void sendField(char* fieldName, char* fieldValue){
 	while(fieldValue[index] != '\0'){
 		write_signal = alt_up_sd_card_write(myFileHandle, fieldValue[index++]);
 		if(write_signal == false) {
-				printf("Error writing time to file...\n");
+				printf("Error writing to file...\n");
 				return;
 		}
 	}
+
+	if(fieldName != "E/W"){
 	write_signal = alt_up_sd_card_write(myFileHandle, ',');
 	write_signal = alt_up_sd_card_write(myFileHandle, ' ');
+	}
 }
 
 int connectSDCard(void){
@@ -98,16 +111,42 @@ int connectSDCard(void){
 		printf("SDCard Open FAILED\n");
 		return 0;
 	}else{
+		connected = 1;
 		return 1;
 	}
 }
 
-void sendDataToSDcard(struct gps_data_entry responseToSend){
+int sendDataToSDcard(struct gps_data_entry responseToSend){
 
 	//wait until sdcard is connected
-	while(!connectSDCard());
 
-	myFileHandle = alt_up_sd_card_fopen("gpsdata.txt", false);			// create a new file test.txt to write to
+	if(!connected){
+		if(!connectSDCard()){
+			return 0;
+		}
+	}
+
+	if(!alt_up_sd_card_is_FAT16()){
+		return 0;
+	}
+
+	const char* filestart = "gpsdata";
+
+	char filenum[5]; /* two bytes of hex = 4 characters, plus NULL terminator */
+	sprintf(filenum, "%x", count);
+	//char filenum[10];
+	//sprintf(filenum, "%02x", count);
+	puts(filenum);
+
+	const char* extension = ".txt";
+
+	char *filename = malloc(strlen(filestart)+ strlen(extension)+ strlen(filenum) + 1);//+1 for the zero-terminator
+
+	strcpy(filename, filestart);
+	strcat(filename, filenum);
+	strcat(filename, extension);
+
+	myFileHandle = alt_up_sd_card_fopen(filename, true);
 
 	if(myFileHandle != -1) {
 			printf("File was created and opened\n");
@@ -118,15 +157,14 @@ void sendDataToSDcard(struct gps_data_entry responseToSend){
 			sendField("N/S", responseToSend.n_s_indicator);
 			sendField("E/W", responseToSend.e_w_indicator);
 
-			alt_up_sd_card_write(myFileHandle, '\r');
-			alt_up_sd_card_write(myFileHandle, '\n');
-			alt_up_sd_card_write(myFileHandle, '\0');
-
 			alt_up_sd_card_fclose(myFileHandle);
-		}
-		else{
+
+			return 1;
+	}
+	else{
 			printf("File NOT created or opened\n");
-		}
+			return 0;
+	}
 }
 
 struct gps_data_entry GPS_get_GPGGA_data(void){
