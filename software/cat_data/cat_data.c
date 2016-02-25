@@ -15,6 +15,8 @@
 #define GPS_RxData      (*(volatile unsigned char *)(0x84000212))
 #define GPS_Baud        (*(volatile unsigned char *)(0x84000214))
 
+#define enable (*(volatile unsigned char *)(0x80001050)) //Switch 3
+
 #define delay_time 10000000
 
 struct gps_data_entry{
@@ -53,6 +55,11 @@ int main(void) {
 	init_GPS();
 	GPS_erase_log();
 
+	while(1){
+		if(enable)
+			break;
+	}
+
 	//Change the condition to the "log button"
 	while(count < lognum){
 
@@ -60,7 +67,8 @@ int main(void) {
 	struct gps_data_entry response = GPS_get_GPGGA_data();
 	int success = sendDataToSDcard(response);
 
-	if(!success){
+	if(!enable){
+		printf("not enabled");
 		break;
 	}
 
@@ -149,7 +157,6 @@ int sendDataToSDcard(struct gps_data_entry responseToSend){
 	myFileHandle = alt_up_sd_card_fopen(filename, true);
 
 	if(myFileHandle != -1) {
-			printf("File was created and opened\n");
 
 			sendField("UTCTime", responseToSend.utc_time);
 			sendField("Latitude", responseToSend.latitude);
@@ -158,6 +165,8 @@ int sendDataToSDcard(struct gps_data_entry responseToSend){
 			sendField("E/W", responseToSend.e_w_indicator);
 
 			alt_up_sd_card_fclose(myFileHandle);
+
+			printf("File was created and opened\n");
 
 			return 1;
 	}
